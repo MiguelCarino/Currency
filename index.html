@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Carino Currency — a keyless, in-browser finance watcher: live FX trends and movers, finance news, and export/import trade value. Data from ECB/Frankfurter, GDELT and the World Bank; nothing is uploaded." />
+  <link rel="icon" href="logo.webp" />
+  <title>Carino Currency — FX, News &amp; Trade</title>
+  <link rel="stylesheet" href="fonts/carino-fonts.css" />
+  <link rel="stylesheet" href="assets/css/currency.css" />
+</head>
+<body>
+
+  <header class="hero">
+    <div class="hero-top">
+      <img src="logo.webp" alt="Carino" />
+      <h1>Carino <span class="accent">Currency</span></h1>
+      <span class="tag">currency.carino.systems</span>
+    </div>
+    <p class="lede">A keyless finance watcher, entirely in your browser — <strong>currency trends</strong> and movers,
+      <strong>finance news</strong>, and the <strong>value of a country's exports &amp; imports</strong>. Rates from the
+      ECB/Frankfurter, headlines from GDELT, trade from the World Bank. Nothing is uploaded; no API key required.</p>
+
+    <div class="controls">
+      <label class="ctl">
+        <span class="ctl-l">Base</span>
+        <select id="baseSelect" class="input" aria-label="Base currency"></select>
+      </label>
+      <div class="seg" id="winTabs" role="tablist" aria-label="Trend window">
+        <button class="seg-b" data-win="30" role="tab">30D</button>
+        <button class="seg-b" data-win="90" role="tab">90D</button>
+        <button class="seg-b" data-win="365" role="tab">1Y</button>
+      </div>
+      <button class="btn primary" id="runAll">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+      <button class="btn" id="exportJson">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+        Export JSON
+      </button>
+      <div class="progress-wrap">
+        <div class="progress"><i id="overallProgress"></i></div>
+        <span class="progress-label" id="overallStatus">idle</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <!-- FX TRENDS + MOVERS -->
+    <section class="panel wide" id="panelFx">
+      <h2>Currency Trends <span class="h2-extra" id="fxAsOf"></span></h2>
+      <p class="panel-sub">Rates vs your base over the selected window. Gold = strengthening vs base, red = weakening.
+        Toggle currencies to watch.</p>
+      <div class="chips" id="fxWatchChips" aria-label="Watched currencies"></div>
+      <div class="movers" id="fxMovers"></div>
+      <div class="fx-grid" id="fxGrid"></div>
+      <p class="note">FX is daily ECB reference data (~16:00 CET, working days) via Frankfurter, with open.er-api.com as
+        a fallback for wider coverage. Trend tool — not intraday, not trading advice.</p>
+    </section>
+
+    <!-- FINANCE NEWS -->
+    <section class="panel wide" id="panelNews">
+      <h2>Finance News <span class="h2-extra" id="newsMeta"></span></h2>
+      <div class="news-toolbar">
+        <div class="chips" id="newsTopics" aria-label="News topics"></div>
+        <div class="news-search">
+          <input type="search" id="newsQuery" class="input" placeholder="Search finance news (e.g. ECB rate, BRL inflation, copper exports)…" autocomplete="off" />
+          <button class="btn" id="newsGo">Search</button>
+        </div>
+      </div>
+      <div class="news-feed" id="newsFeed"></div>
+      <p class="note">Headlines from GDELT DOC 2.0 (global, ~15-min refresh), tinted by article tone. A discovery feed,
+        not curated analysis — follow the source link for the full story.</p>
+    </section>
+
+    <!-- EXPORTS / IMPORTS TRADE VALUE -->
+    <section class="panel wide" id="panelTrade">
+      <h2>Exports &amp; Imports <span class="h2-extra" id="tradeMeta"></span></h2>
+      <div class="trade-head">
+        <label class="ctl">
+          <span class="ctl-l">Economy</span>
+          <select id="tradeCountry" class="input" aria-label="Trade economy"></select>
+        </label>
+        <div class="stats" id="tradeStats">
+          <div class="stat"><div class="n" id="tExportsVal">—</div><div class="l">Exports <span id="tExportsYoY" class="yoy"></span></div></div>
+          <div class="stat"><div class="n" id="tImportsVal">—</div><div class="l">Imports <span id="tImportsYoY" class="yoy"></span></div></div>
+          <div class="stat"><div class="n" id="tBalanceVal">—</div><div class="l">Trade balance <span id="tradeYear" class="yoy"></span></div></div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="tradeChart" class="trade-chart"></canvas></div>
+      <div class="table-scroll">
+        <table class="tbl" id="tradeTableEl">
+          <thead><tr><th>Year</th><th>Exports</th><th>Imports</th><th>Balance</th><th>Bal. Δ YoY</th></tr></thead>
+          <tbody id="tradeTable"></tbody>
+        </table>
+      </div>
+      <p class="note">Exports/imports of goods &amp; services in current US$, from the World Bank (annual, typically a
+        one-year lag — the vintage is labelled above). Aggregate national trade value, not per-commodity.</p>
+    </section>
+
+  </main>
+
+  <script src="carino-navbar.js" data-app="Currency" defer></script>
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
