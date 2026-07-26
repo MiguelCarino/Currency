@@ -79,11 +79,30 @@ function exportJSON() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1500);
 }
 
+// On narrow screens all three panels can't share the viewport, so a tab bar
+// shows one pillar at a time (grid[data-active] drives which). On wide screens
+// CSS hides the tab bar and shows every panel, so this is a harmless no-op there.
+function initTabs() {
+  const bar = $('tabBar');
+  const grid = $('appGrid');
+  if (!bar || !grid) return;
+  const set = (t) => {
+    grid.dataset.active = t;
+    [...bar.querySelectorAll('.tab-b')].forEach((b) => b.classList.toggle('active', b.dataset.tab === t));
+  };
+  bar.addEventListener('click', (e) => {
+    const b = e.target.closest('.tab-b');
+    if (b) set(b.dataset.tab);
+  });
+  set(grid.dataset.active || 'fx');
+}
+
 // ---- boot ---------------------------------------------------------------
 initFx();
 initNews();
 initTrade();
 initWinTabs();
+initTabs();
 
 const runBtn = $('runAll');
 if (runBtn) runBtn.addEventListener('click', runAll);

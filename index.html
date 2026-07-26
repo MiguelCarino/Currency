@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Carino Currency — a keyless, in-browser finance watcher: live FX trends and movers, finance news, and export/import trade value. Data from ECB/Frankfurter, GDELT and the World Bank; nothing is uploaded." />
   <link rel="icon" href="logo.webp" />
   <title>Carino Currency — FX, News &amp; Trade</title>
@@ -11,7 +11,8 @@
 </head>
 <body>
 
-  <header class="hero">
+  <!-- Control bar (branding comes from the shared navbar) -->
+  <header class="topbar">
     <div class="controls">
       <label class="ctl">
         <span class="ctl-l">Base</span>
@@ -24,11 +25,11 @@
       </div>
       <button class="btn primary" id="runAll">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        Refresh
+        <span class="btn-t">Refresh</span>
       </button>
       <button class="btn" id="exportJson">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
-        Export JSON
+        <span class="btn-t">Export</span>
       </button>
       <div class="progress-wrap">
         <div class="progress"><i id="overallProgress"></i></div>
@@ -37,58 +38,67 @@
     </div>
   </header>
 
-  <main class="grid">
+  <!-- Mobile pillar switcher (hidden on wide screens where all panels show) -->
+  <nav class="tabbar" id="tabBar" aria-label="Sections">
+    <button class="tab-b" data-tab="fx">Trends</button>
+    <button class="tab-b" data-tab="news">News</button>
+    <button class="tab-b" data-tab="trade">Trade</button>
+  </nav>
+
+  <main class="grid" id="appGrid" data-active="fx">
 
     <!-- FX TRENDS + MOVERS -->
-    <section class="panel wide" id="panelFx">
+    <section class="panel" id="panelFx">
       <h2>Currency Trends <span class="h2-extra" id="fxAsOf"></span></h2>
-      <p class="panel-sub">Rates vs your base over the selected window. Gold = strengthening vs base, red = weakening.
-        Toggle currencies to watch.</p>
-      <div class="chips" id="fxWatchChips" aria-label="Watched currencies"></div>
-      <div class="movers" id="fxMovers"></div>
-      <div class="fx-grid" id="fxGrid"></div>
-      <p class="note">FX is daily ECB reference data (~16:00 CET, working days) via Frankfurter, with open.er-api.com as
-        a fallback for wider coverage. Trend tool — not intraday, not trading advice.</p>
+      <div class="panel-body">
+        <div class="movers" id="fxMovers"></div>
+        <div class="chips" id="fxWatchChips" aria-label="Watched currencies"></div>
+        <div class="fx-grid" id="fxGrid"></div>
+        <p class="note">Daily ECB reference data via Frankfurter (open.er-api.com fallback). Gold = strengthening vs base,
+          red = weakening. Trend tool — not intraday, not advice.</p>
+      </div>
     </section>
 
     <!-- FINANCE NEWS -->
-    <section class="panel wide" id="panelNews">
+    <section class="panel" id="panelNews">
       <h2>Finance News <span class="h2-extra" id="newsMeta"></span></h2>
-      <div class="news-toolbar">
-        <div class="chips" id="newsTopics" aria-label="News topics"></div>
-        <div class="news-search">
-          <input type="search" id="newsQuery" class="input" placeholder="Search finance news (e.g. ECB rate, BRL inflation, copper exports)…" autocomplete="off" />
-          <button class="btn" id="newsGo">Search</button>
+      <div class="panel-body">
+        <div class="news-toolbar">
+          <div class="chips" id="newsTopics" aria-label="News topics"></div>
+          <div class="news-search">
+            <input type="search" id="newsQuery" class="input" placeholder="Search finance news…" autocomplete="off" />
+            <button class="btn" id="newsGo">Search</button>
+          </div>
         </div>
+        <div class="news-feed" id="newsFeed"></div>
+        <p class="note">Headlines from GDELT DOC 2.0 (~15-min refresh), tinted by tone. A discovery feed — follow the link for the full story.</p>
       </div>
-      <div class="news-feed" id="newsFeed"></div>
-      <p class="note">Headlines from GDELT DOC 2.0 (global, ~15-min refresh), tinted by article tone. A discovery feed,
-        not curated analysis — follow the source link for the full story.</p>
     </section>
 
     <!-- EXPORTS / IMPORTS TRADE VALUE -->
-    <section class="panel wide" id="panelTrade">
+    <section class="panel" id="panelTrade">
       <h2>Exports &amp; Imports <span class="h2-extra" id="tradeMeta"></span></h2>
-      <div class="trade-head">
-        <label class="ctl">
-          <span class="ctl-l">Economy</span>
-          <select id="tradeCountry" class="input" aria-label="Trade economy"></select>
-        </label>
-        <div class="stats" id="tradeStats">
-          <div class="stat"><div class="n" id="tExportsVal">—</div><div class="l">Exports <span id="tExportsYoY" class="yoy"></span></div></div>
-          <div class="stat"><div class="n" id="tImportsVal">—</div><div class="l">Imports <span id="tImportsYoY" class="yoy"></span></div></div>
-          <div class="stat"><div class="n" id="tBalanceVal">—</div><div class="l">Trade balance <span id="tradeYear" class="yoy"></span></div></div>
+      <div class="panel-body">
+        <div class="trade-head">
+          <label class="ctl">
+            <span class="ctl-l">Economy</span>
+            <select id="tradeCountry" class="input" aria-label="Trade economy"></select>
+          </label>
+          <div class="stats" id="tradeStats">
+            <div class="stat"><div class="n" id="tExportsVal">—</div><div class="l">Exports <span id="tExportsYoY" class="yoy"></span></div></div>
+            <div class="stat"><div class="n" id="tImportsVal">—</div><div class="l">Imports <span id="tImportsYoY" class="yoy"></span></div></div>
+            <div class="stat"><div class="n" id="tBalanceVal">—</div><div class="l">Balance <span id="tradeYear" class="yoy"></span></div></div>
+          </div>
         </div>
+        <div class="chart-wrap"><canvas id="tradeChart" class="trade-chart"></canvas></div>
+        <div class="table-scroll">
+          <table class="tbl" id="tradeTableEl">
+            <thead><tr><th>Year</th><th>Exports</th><th>Imports</th><th>Balance</th><th>Bal. Δ YoY</th></tr></thead>
+            <tbody id="tradeTable"></tbody>
+          </table>
+        </div>
+        <p class="note">Goods &amp; services in current US$, World Bank (annual, ~1yr lag). Aggregate national trade, not per-commodity.</p>
       </div>
-      <div class="chart-wrap"><canvas id="tradeChart" class="trade-chart"></canvas></div>
-      <div class="table-scroll">
-        <table class="tbl" id="tradeTableEl">
-          <thead><tr><th>Year</th><th>Exports</th><th>Imports</th><th>Balance</th><th>Bal. Δ YoY</th></tr></thead>
-          <tbody id="tradeTable"></tbody>
-        </table>
-      </div>
-      <p class="note">Exports/imports of goods &amp; services in current US$, from the World Bank (annual, typically a
-        one-year lag — the vintage is labelled above). Aggregate national trade value, not per-commodity.</p>
     </section>
 
   </main>
