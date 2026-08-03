@@ -5,7 +5,7 @@
 // series, and render stat tiles, a two-line chart, and a table. Nothing throws
 // out of runTrade(); on failure the table area shows a small .empty-note.
 
-import { $, el, setText, clear, fmtMoney, fmtPct, pctChange, trend, cached, fetchJSON, TTL } from './util.js';
+import { $, el, setText, clear, fmtMoney, fmtPct, pctChange, trend, cached, fetchJSON, TTL, T, Tf, countryName } from './util.js';
 import { settings, saveSettings, report } from './state.js';
 import { COUNTRIES, COUNTRY_BY_ISO3 } from './data/countries.js';
 
@@ -47,7 +47,7 @@ export function initTrade() {
   if (!sel) return;
   clear(sel);
   for (const c of COUNTRIES) {
-    const opt = el('option', null, c.name);
+    const opt = el('option', null, countryName(c.iso2, c.name));
     opt.value = c.iso3;
     sel.appendChild(opt);
   }
@@ -55,12 +55,16 @@ export function initTrade() {
   if (!COUNTRY_BY_ISO3[settings.country]) settings.country = COUNTRIES[0].iso3;
   sel.value = settings.country;
 
+    // init* runs again on a language switch to relabel the options, so the
+    // listener is bound once — the element outlives the repaint, its children
+    // do not.
+  if (!sel.dataset.wired) { sel.dataset.wired = '1';
   sel.addEventListener('change', () => {
     settings.country = sel.value;
     saveSettings();
     document.dispatchEvent(new CustomEvent('cur:country', { detail: { iso3: settings.country } }));
     runTrade().catch((e) => console.warn('trade', e));
-  });
+  }); }
 }
 
 // ---- run ----------------------------------------------------------------
@@ -73,9 +77,9 @@ export async function runTrade() {
   try {
     ({ exports, imports } = await fetchTrade(iso3));
   } catch (e) {
-    renderEmpty('No World Bank trade data for this economy.');
+    renderEmpty(T('No World Bank trade data for this economy.'));
     report.trade = { iso3, name, exports: [], imports: [], balance: [], latestYear: null };
-    setText('tradeMeta', 'World Bank · goods & services · current US$');
+    setText('tradeMeta', T('World Bank · goods & services · current US$'));
     return;
   }
 
@@ -92,10 +96,10 @@ export async function runTrade() {
   const latestYear = balance.length ? balance[balance.length - 1].year : null;
 
   if (latestYear == null) {
-    renderEmpty('No World Bank trade data for this economy.');
+    renderEmpty(T('No World Bank trade data for this economy.'));
     drawTradeChart($('tradeChart'), [], []);
     report.trade = { iso3, name, exports, imports, balance: [], latestYear: null };
-    setText('tradeMeta', 'World Bank · goods & services · current US$');
+    setText('tradeMeta', T('World Bank · goods & services · current US$'));
     return;
   }
 
@@ -104,7 +108,7 @@ export async function runTrade() {
   setText('tExportsVal', fmtMoney(exp));
   setText('tImportsVal', fmtMoney(imp));
   setText('tBalanceVal', fmtMoney(bal));
-  setText('tradeYear', 'FY' + latestYear);
+  setText('tradeYear', Tf('FY{y}', { y: latestYear }));
 
   setYoY('tExportsYoY', prevValue(exports, latestYear), exp);
   setYoY('tImportsYoY', prevValue(imports, latestYear), imp);
@@ -116,7 +120,7 @@ export async function runTrade() {
   renderTable(expMap, impMap, balMap);
 
   // Meta + report ---------------------------------------------------------
-  setText('tradeMeta', 'World Bank · goods & services · current US$ · latest FY' + latestYear);
+  setText('tradeMeta', Tf('World Bank · goods & services · current US$ · latest FY{y}', { y: latestYear }));
   report.trade = { iso3, name, exports, imports, balance, latestYear };
 }
 
@@ -147,7 +151,7 @@ function renderTable(expMap, impMap, balMap) {
 
   // Union of all years, descending, capped to ~12 rows.
   const years = [...new Set([...expMap.keys(), ...impMap.keys()])].sort((a, b) => b - a).slice(0, 12);
-  if (!years.length) { renderEmpty('No World Bank trade data for this economy.'); return; }
+  if (!years.length) { renderEmpty(T('No World Bank trade data for this economy.')); return; }
 
   for (const year of years) {
     const exp = expMap.has(year) ? expMap.get(year) : null;
@@ -260,8 +264,8 @@ function drawTradeChart(canvas, exports, imports) {
   ctx.font = "10px 'IBM Plex Mono', monospace";
   const ly = padT + 2;
   ctx.fillStyle = okC; ctx.fillRect(padL, ly - 4, 10, 3);
-  ctx.fillStyle = axis; ctx.fillText('Exports', padL + 14, ly - 2);
+  ctx.fillStyle = axis; ctx.fillText(T('Exports'), padL + 14, ly - 2);
   ctx.fillStyle = errC; ctx.fillRect(padL + 66, ly - 4, 10, 3);
-  ctx.fillStyle = axis; ctx.fillText('Imports', padL + 80, ly - 2);
+  ctx.fillStyle = axis; ctx.fillText(T('Imports'), padL + 80, ly - 2);
   void accent;   // reserved (kept read to match theme convention)
 }

@@ -15,15 +15,26 @@ Three pillars, all from public keyless + CORS-friendly sources, computed entirel
 - FX is daily ECB data (~16:00 CET on working days) and World Bank trade is annual (≈1-year lag): this is a **trend** tool, not an intraday or trading tool, and not investment advice.
 - Per-commodity / per-HS-code trade detail (UN Comtrade, IMF) is intentionally out of scope for the keyless MVP — those sources are not CORS-accessible from a static page and would need a proxy.
 - Shares the fleet's self-injecting navbar + clock, fonts, and chart primitives (`viz.js`) with the other Carino projects.
+- Translated the fleet way: `carino-lang.js` owns the preference (`?lang` > `.carino.systems` cookie > browser > `en`) and
+  `i18n.js` owns this app's dictionary, with the English string as the key. The three pillars render from JS, so they reach
+  the dictionary through `T()`/`Tf()` in `util.js` and repaint via `window.onLanguageApplied` — replayed from the TTL cache,
+  so switching language costs no network.
+- Currency and country **names** are deliberately not in `i18n.js`. `Intl.DisplayNames` already ships CLDR's in every locale,
+  so `util.js` asks the browser and keeps the English `name` in `data/` only as a fallback (and for `EMU`, which is a currency
+  zone rather than a region). That is what the `iso2` on each country is for. The GDELT query built in `activeQuery()` stays
+  English on purpose — it is sent to an English news index, not shown to anyone.
 
 ## Structure
 
 ```
 index.html                 shell + DOM contract
+carino-navbar.js           shared fleet navbar (self-injecting; loads carino-clock.js)
+carino-lang.js             shared fleet language preference + switcher
+i18n.js                    this app's dictionary (es / pt-BR / ja / ru)
 assets/css/currency.css    fleet theme
 assets/js/
   app.js                   orchestrator (base/window controls, full refresh, export)
-  util.js                  DOM/format helpers + TTL cache
+  util.js                  DOM/format helpers, TTL cache, T() + Intl display names
   state.js                 settings + shared report
   viz.js                   sparkline + line chart (shared)
   fx.js                    FX trends + movers  (Frankfurter)

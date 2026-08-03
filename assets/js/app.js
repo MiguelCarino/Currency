@@ -14,7 +14,7 @@
 // Cross-context: trade.js dispatches document 'cur:country' on change; news.js MAY
 // listen to refresh a derived query. All coordination is via shared state.js.
 
-import { $, setText } from './util.js';
+import { $, setText, T } from './util.js';
 import { report, settings, saveSettings } from './state.js';
 import { initFx, runFx } from './fx.js';
 import { initNews, runNews } from './news.js';
@@ -34,19 +34,19 @@ async function runAll() {
   running = true;
   const btn = $('runAll');
   if (btn) btn.disabled = true;
-  setProgress(0.06, 'loading…');
+  setProgress(0.06, T('loading…'));
 
   const tasks = [['FX', runFx], ['news', runNews], ['trade', runTrade]];
   let done = 0;
   await Promise.all(tasks.map(([name, fn]) =>
     Promise.resolve().then(fn).catch((e) => console.warn(name, e)).finally(() => {
       done++;
-      setProgress(0.06 + 0.94 * (done / tasks.length), `${name} ✓`);
+      setProgress(0.06 + 0.94 * (done / tasks.length), `${T(name)} ✓`);
     })
   ));
 
   report.finishedAt = new Date().toISOString();
-  setProgress(1, 'updated');
+  setProgress(1, T('updated'));
   if (btn) btn.disabled = false;
   running = false;
 }
@@ -108,5 +108,22 @@ const runBtn = $('runAll');
 if (runBtn) runBtn.addEventListener('click', runAll);
 const jsonBtn = $('exportJson');
 if (jsonBtn) jsonBtn.addEventListener('click', () => { try { exportJSON(); } catch (e) { console.warn('exportJSON', e); } });
+
+// i18n.js calls this after it has swapped every [data-i18n] node. The pillars
+// render from JS, so nothing above would follow a language switch on its own —
+// re-running them repaints from the localStorage TTL cache, which means a switch
+// costs no network. initFx/initNews/initTrade are re-run too, because the base
+// <select>, the watch chips and the economy list carry names and labels of their
+// own; they preserve the current selection, so this is a repaint, not a reset.
+window.onLanguageApplied = () => {
+  try {
+    initFx();
+    initNews();
+    initTrade();
+    runFx().catch(() => {});
+    runNews().catch(() => {});
+    runTrade().catch(() => {});
+  } catch (e) { console.warn('relocalise', e); }
+};
 
 runAll();   // autorun on load

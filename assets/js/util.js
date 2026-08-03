@@ -110,3 +110,34 @@ export const TTL = {
   news: 15 * 60 * 1000,        // GDELT rolls ~every 15 min
   trade: 24 * 60 * 60 * 1000,  // World Bank trade is annual; a day is generous
 };
+
+// ---- i18n bridge ---------------------------------------------------------
+// i18n.js is a classic deferred script and these are modules, so `t` may not
+// exist for the first paint — fall through to the English key, which is what
+// t() itself does for a missing entry. Every user-facing string a module
+// writes goes through T(); placeholders are filled after translation so a
+// locale is free to move them.
+export const T = (s) => (window.CarinoI18n ? window.CarinoI18n.t(s) : s);
+export function Tf(s, vars) {
+  let out = T(s);
+  for (const k of Object.keys(vars || {})) out = out.split('{' + k + '}').join(vars[k]);
+  return out;
+}
+export const locale = () => (window.CarinoLang && window.CarinoLang.current) || 'en';
+
+/* Currency and country names are data, not copy — 66 names across five locales
+   is a translation table nobody would keep correct. The browser already ships
+   them: Intl.DisplayNames is the same CLDR data every OS uses. The English name
+   in data/ stays as the fallback for engines without it (and for EMU, which is
+   a currency zone, not a region). */
+function displayName(type, code, fallback) {
+  if (!code) return fallback;
+  try {
+    const dn = new Intl.DisplayNames([locale()], { type, fallback: 'none' });
+    const out = dn.of(code);
+    if (out && out !== code) return out;
+  } catch (e) { /* unsupported engine or bad code — English it is */ }
+  return fallback;
+}
+export const currencyName = (code, fallback) => displayName('currency', code, fallback);
+export const countryName = (iso2, fallback) => displayName('region', iso2, fallback);

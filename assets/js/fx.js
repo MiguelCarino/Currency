@@ -9,7 +9,7 @@
 // color (auto from viz.js) and the delta agree: gold/green = T up, red = T down.
 
 import {
-  $, el, setText, clear, fmtPct, fmtNum, pctChange, trend,
+  $, el, setText, clear, fmtPct, fmtNum, pctChange, trend, T, Tf, currencyName,
   isoDate, daysAgo, fetchJSON, tryAll, cached, TTL,
 } from './util.js';
 import { settings, saveSettings, toggleWatch, report } from './state.js';
@@ -17,7 +17,7 @@ import { CURRENCIES, BY_CODE } from './data/currencies.js';
 import { sparkline } from './viz.js';
 
 // Human label for the current window, e.g. "90D" / "1Y".
-function winLabel(days) { return days === 365 ? '1Y' : days + 'D'; }
+function winLabel(days) { return days === 365 ? T('1Y') : T(days + 'D'); }
 
 // ---- init: base select + watch chips ------------------------------------
 export function initFx() {
@@ -25,17 +25,21 @@ export function initFx() {
   if (sel) {
     clear(sel);
     for (const c of CURRENCIES) {
-      const o = el('option', null, c.code + ' · ' + c.name);
+      const o = el('option', null, c.code + ' · ' + currencyName(c.code, c.name));
       o.value = c.code;
       sel.appendChild(o);
     }
     sel.value = settings.base;
+    // init* runs again on a language switch to relabel the options, so the
+    // listener is bound once — the element outlives the repaint, its children
+    // do not.
+    if (!sel.dataset.wired) { sel.dataset.wired = '1';
     sel.addEventListener('change', () => {
       settings.base = sel.value;
       saveSettings();
       renderChips();          // base must never also appear as a chip
       runFx().catch((e) => console.warn('fx', e));
-    });
+    }); }
   }
   renderChips();
 }
@@ -76,7 +80,7 @@ export async function runFx() {
   // Watched targets excluding the base itself (Frankfurter can't quote base/base).
   const symbols = settings.watch.filter((c) => c !== base && BY_CODE[c]);
   if (!symbols.length) {
-    emptyNote(grid, 'No currencies watched — tap a chip above to add one.');
+    emptyNote(grid, T('No currencies watched — tap a chip above to add one.'));
     if (movers) clear(movers);
     setText('fxAsOf', '');
     report.fx = { base, window: windowDays, asOf: null, rows: [], movers: [] };
@@ -98,7 +102,7 @@ export async function runFx() {
     );
   } catch (e) {
     console.warn('fx fetch', e);
-    emptyNote(grid, 'Could not load FX rates right now. Please refresh in a moment.');
+    emptyNote(grid, T('Could not load FX rates right now. Please refresh in a moment.'));
     if (movers) clear(movers);
     setText('fxAsOf', '');
     report.fx = { base, window: windowDays, asOf: null, rows: [], movers: [] };
@@ -108,7 +112,7 @@ export async function runFx() {
   const rates = (data && data.rates) || {};
   const dates = Object.keys(rates).sort();   // ascending, working days only
   if (!dates.length) {
-    emptyNote(grid, 'No rate data returned for this window.');
+    emptyNote(grid, T('No rate data returned for this window.'));
     if (movers) clear(movers);
     setText('fxAsOf', '');
     report.fx = { base, window: windowDays, asOf: null, rows: [], movers: [] };
@@ -133,14 +137,14 @@ export async function runFx() {
   }
 
   if (!rows.length) {
-    emptyNote(grid, 'No rate data returned for the watched currencies.');
+    emptyNote(grid, T('No rate data returned for the watched currencies.'));
     if (movers) clear(movers);
   } else {
     renderGrid(grid, base, rows, windowDays);
     renderMovers(movers, rows, windowDays, asOf);
   }
 
-  setText('fxAsOf', 'as of ' + asOf + ' · vs ' + base);
+  setText('fxAsOf', Tf('as of {d} · vs {b}', { d: asOf, b: base }));
 
   // Shared report for JSON export.
   report.fx = {
@@ -163,7 +167,7 @@ function renderGrid(grid, base, rows, windowDays) {
     const top = el('div', 'fx-top');
     top.appendChild(el('span', 'fx-flag', r.flag));
     top.appendChild(el('span', 'fx-pair', base + '/' + r.code));
-    top.appendChild(el('span', 'fx-name', r.name));
+    top.appendChild(el('span', 'fx-name', currencyName(r.code, r.name)));
     card.appendChild(top);
 
     card.appendChild(el('div', 'fx-rate', '1 ' + base + ' = ' + fmtNum(r.rate) + ' ' + r.code));
@@ -174,7 +178,7 @@ function renderGrid(grid, base, rows, windowDays) {
 
     const foot = el('div', 'fx-foot');
     foot.appendChild(el('span', 'delta ' + trend(r.change), fmtPct(r.change)));
-    foot.appendChild(el('span', 'fx-name', wl + ' vs ' + base));
+    foot.appendChild(el('span', 'fx-name', Tf('{w} vs {b}', { w: wl, b: base })));
     card.appendChild(foot);
 
     grid.appendChild(card);
@@ -203,7 +207,7 @@ function renderMovers(node, rows, windowDays, asOf) {
 
   for (const m of mv) {
     const tile = el('div', 'mover');
-    tile.appendChild(el('div', 'mv-l', (m.kind === 'gainer' ? 'Top gainer ' : 'Top weakener ') + wl));
+    tile.appendChild(el('div', 'mv-l', T(m.kind === 'gainer' ? 'Top gainer' : 'Top weakener') + ' ' + wl));
     const v = el('div', 'mv-v');
     const code = el('span', 'mv-code');
     code.appendChild(el('span', 'flag', m.flag + ' '));
@@ -217,7 +221,7 @@ function renderMovers(node, rows, windowDays, asOf) {
   // 3rd informational tile: as-of date.
   if (asOf) {
     const tile = el('div', 'mover');
-    tile.appendChild(el('div', 'mv-l', 'As of'));
+    tile.appendChild(el('div', 'mv-l', T('As of')));
     const v = el('div', 'mv-v');
     v.appendChild(el('span', 'mv-code', asOf));
     tile.appendChild(v);

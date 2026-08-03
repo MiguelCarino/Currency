@@ -4,7 +4,7 @@
 // no upload; fetch-through-cache with the shared news TTL. Never throws out of
 // runNews — failures render a small .empty-note in the panel.
 
-import { $, el, setText, clear, cached, fetchJSON, TTL } from './util.js';
+import { $, el, setText, clear, cached, fetchJSON, TTL, T, Tf } from './util.js';
 import { settings, saveSettings, report } from './state.js';
 import { BY_CODE } from './data/currencies.js';
 import { COUNTRY_BY_ISO3 } from './data/countries.js';
@@ -19,12 +19,14 @@ const TOPICS = [
 ];
 
 // GDELT seendate "YYYYMMDDTHHMMSSZ" → "Jul 26, 14:30" (UTC). Falls back to raw.
+// Only the month abbreviation is translated — the query built in activeQuery()
+// deliberately stays English, because it is sent to an English news index.
 function fmtSeen(s) {
   if (!s || s.length < 15) return s || '';
   const iso = `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T${s.slice(9, 11)}:${s.slice(11, 13)}:${s.slice(13, 15)}Z`;
   const d = new Date(iso);
   if (isNaN(d)) return s;
-  const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()];
+  const mon = T(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()]);
   const hh = String(d.getUTCHours()).padStart(2, '0');
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
   return `${mon} ${d.getUTCDate()}, ${hh}:${mm}`;
@@ -44,6 +46,8 @@ function activeQuery() {
   return `(${subject}) (currency OR inflation OR trade OR exports)`;
 }
 
+let wiredCountry = false;
+
 // ---- init: build chips + wire search box --------------------------------
 export function initNews() {
   const chipWrap = $('newsTopics');
@@ -57,7 +61,7 @@ export function initNews() {
   if (chipWrap) {
     clear(chipWrap);
     TOPICS.forEach((t) => {
-      const chip = el('span', 'chip', t.label);
+      const chip = el('span', 'chip', T(t.label));
       chip.setAttribute('role', 'button');
       chip.tabIndex = 0;
       chip.dataset.query = t.query;
@@ -82,14 +86,22 @@ export function initNews() {
     syncChips();
     runNews();
   };
-  if (input) input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
-  if (go) go.addEventListener('click', commit);
+  // The chips are rebuilt (and rebound) every time; these three outlive the
+  // repaint a language switch triggers, so they are bound once.
+  if (input && !input.dataset.wired) {
+    input.dataset.wired = '1';
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+  }
+  if (go && !go.dataset.wired) { go.dataset.wired = '1'; go.addEventListener('click', commit); }
 
   // Trade country changed: if we're on a derived query (no explicit search),
   // re-run so the context feed follows the newly selected economy.
-  document.addEventListener('cur:country', () => {
-    if (!(settings.newsQuery || '').trim()) runNews();
-  });
+  if (!wiredCountry) {
+    wiredCountry = true;
+    document.addEventListener('cur:country', () => {
+      if (!(settings.newsQuery || '').trim()) runNews();
+    });
+  }
 }
 
 // Highlight the chip matching the current query (only in preset mode).
@@ -115,7 +127,7 @@ export async function runNews() {
     articles = (data && Array.isArray(data.articles)) ? data.articles : [];
   } catch (e) {
     // GDELT returns empty/non-JSON on bad queries → fetchJSON throws. Degrade.
-    if (feed) { clear(feed); feed.appendChild(el('p', 'empty-note', 'No headlines for this query.')); }
+    if (feed) { clear(feed); feed.appendChild(el('p', 'empty-note', T('No headlines for this query.'))); }
     setText('newsMeta', '');
     report.news = { query, articles: [] };
     return;
@@ -124,13 +136,13 @@ export async function runNews() {
   if (feed) {
     clear(feed);
     if (!articles.length) {
-      feed.appendChild(el('p', 'empty-note', 'No headlines for this query.'));
+      feed.appendChild(el('p', 'empty-note', T('No headlines for this query.')));
     } else {
       articles.slice(0, 40).forEach((a) => feed.appendChild(newsItem(a)));
     }
   }
 
-  setText('newsMeta', `${articles.length} headline${articles.length === 1 ? '' : 's'} · ${truncate(query, 52)}`);
+  setText('newsMeta', Tf('{n} headlines · {q}', { n: articles.length, q: truncate(query, 52) }));
 
   // Persist for JSON export — only fields GDELT actually returns (no fabrication).
   report.news = {
@@ -151,7 +163,7 @@ function newsItem(a) {
   item.target = '_blank';
   item.rel = 'noopener';
 
-  item.appendChild(el('div', 'news-title', (a.title || '').trim() || '(untitled)'));
+  item.appendChild(el('div', 'news-title', (a.title || '').trim() || T('(untitled)')));
 
   const src = el('div', 'news-src');
   src.appendChild(el('span', null, a.domain || a.sourcecountry || '—'));
