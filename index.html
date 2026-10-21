@@ -13,7 +13,18 @@
   <meta property="og:title" content="Carino Currency">
   <meta property="og:description" content="Carino Currency — a keyless, in-browser finance watcher: live FX trends and movers, finance news, and export/import trade value. Data from ECB/Frankfurter, GDELT and the World Bank; nothing is uploaded.">
   <meta property="og:url" content="https://currency.carino.systems/">
-  <meta property="og:image" content="https://currency.carino.systems/logo.webp">
+  <meta property="og:image" content="https://currency.carino.systems/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Carino Currency">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="alternate" hreflang="en" href="https://currency.carino.systems/">
+  <link rel="alternate" hreflang="es" href="https://currency.carino.systems/?lang=es">
+  <link rel="alternate" hreflang="pt-BR" href="https://currency.carino.systems/?lang=pt-BR">
+  <link rel="alternate" hreflang="ja" href="https://currency.carino.systems/?lang=ja">
+  <link rel="alternate" hreflang="ru" href="https://currency.carino.systems/?lang=ru">
+  <link rel="alternate" hreflang="x-default" href="https://currency.carino.systems/">
+  <script type="application/json" id="carino-head-i18n">{"es": {"title": "Carino Currency — Tipo de cambio, noticias y comercio exterior", "desc": "Monitor financiero sin claves en tu navegador: tipo de cambio, noticias y comercio exterior. Datos de BCE/Frankfurter, GDELT y Banco Mundial; nada se sube."}, "pt-BR": {"title": "Carino Currency — Câmbio, notícias e comércio exterior", "desc": "Monitor financeiro sem chaves no navegador: câmbio ao vivo, notícias e comércio exterior. Dados do BCE/Frankfurter, GDELT e Banco Mundial; nada é enviado."}, "ja": {"title": "Carino Currency — 為替・ニュース・貿易", "desc": "APIキー不要のブラウザ型金融ウォッチャー。為替の推移と変動、金融ニュース、輸出入額。データはECB/Frankfurter・GDELT・世界銀行、送信なし。"}, "ru": {"title": "Carino Currency — курсы валют, новости и торговля", "desc": "Финансовый монитор в браузере без ключей: курсы валют, новости, экспорт и импорт. Данные ЕЦБ/Frankfurter, GDELT и Всемирного банка; ничего не загружается."}}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Carino Currency", "url": "https://currency.carino.systems/", "description": "Carino Currency — a keyless, in-browser finance watcher: live FX trends and movers, finance news, and export/import trade value. Data from ECB/Frankfurter, GDELT and the World Bank; nothing is uploaded.", "operatingSystem": "Any (runs in a web browser)", "isAccessibleForFree": true, "author": {"@type": "Person", "name": "Miguel Cariño", "url": "https://carino.systems/"}}</script>
   <!-- /carino:head -->
   <link rel="stylesheet" href="fonts/carino-fonts.css" />
@@ -33,11 +44,11 @@
         <button class="seg-b" data-win="90" role="tab" data-i18n>90D</button>
         <button class="seg-b" data-win="365" role="tab" data-i18n>1Y</button>
       </div>
-      <button class="btn primary" id="runAll">
+      <button class="btn primary" id="runAll" aria-label="Refresh">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         <span class="btn-t" data-i18n>Refresh</span>
       </button>
-      <button class="btn" id="exportJson">
+      <button class="btn" id="exportJson" aria-label="Export">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
         <span class="btn-t" data-i18n>Export</span>
       </button>

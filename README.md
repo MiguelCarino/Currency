@@ -3,6 +3,8 @@
 A keyless, in-browser finance watcher — part of the [Carino](https://carino.systems) fleet.
 Live at **[currency.carino.systems](https://currency.carino.systems)**.
 
+![Carino Currency](screenshot.webp)
+
 Three pillars, all from public keyless + CORS-friendly sources, computed entirely in your browser (nothing is uploaded, no API key required):
 
 - **Currency trends & movers** — daily FX vs a base currency over 30 / 90 / 365 days, with sparklines and top strengthener/weakener callouts. Source: [Frankfurter](https://frankfurter.dev) (ECB reference rates), with `open.er-api.com` as a wider-coverage fallback.

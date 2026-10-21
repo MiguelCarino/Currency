@@ -380,6 +380,8 @@ const I18N_ARIA = {
     newsTopics: 'News topics',
     tradeCountry: 'Trade economy',
     tabBar: 'Sections',
+    runAll: 'Refresh',
+    exportJson: 'Export',
 };
 function applyAttrI18n() {
     const q = document.getElementById('newsQuery');
