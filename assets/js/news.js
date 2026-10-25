@@ -2,10 +2,10 @@
 // Query is either the user's (settings.newsQuery) or, when empty, derived from
 // the base currency + selected trade country so the feed tracks context. No key,
 // no upload; fetch-through-cache with the shared news TTL. Never throws out of
-// runNews — failures render a small .empty-note in the panel.
+// runNews — a failure renders an error with Retry, never an empty result.
 
-import { $, el, setText, clear, cached, fetchJSON, TTL, T, Tf } from './util.js';
-import { settings, saveSettings, report } from './state.js';
+import { $, el, setText, clear, cached, fetchJSON, TTL, T, Tf, fmtClock, markStale, errorBox, loadingBox } from './util.js';
+import { settings, saveSettings, report, noteSource } from './state.js';
 import { BY_CODE } from './data/currencies.js';
 import { COUNTRY_BY_ISO3 } from './data/countries.js';
 
@@ -121,17 +121,24 @@ export async function runNews() {
   const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=' + encodeURIComponent(query) +
     '&mode=artlist&format=json&maxrecords=48&sort=datedesc&timespan=3d';
 
-  let articles = [];
+  let articles = [], res;
+  loadingBox(feed);
+  setText('newsMeta', '');
+  noteSource('news', { src: 'GDELT', loading: true });
   try {
-    const data = await cached('news:' + query, TTL.news, () => fetchJSON(url));
-    articles = (data && Array.isArray(data.articles)) ? data.articles : [];
+    res = await cached('news:' + query, TTL.news, () => fetchJSON(url));
+    articles = (res.v && Array.isArray(res.v.articles)) ? res.v.articles : [];
   } catch (e) {
-    // GDELT returns empty/non-JSON on bad queries → fetchJSON throws. Degrade.
-    if (feed) { clear(feed); feed.appendChild(el('p', 'empty-note', T('No headlines for this query.'))); }
-    setText('newsMeta', '');
+    // GDELT answers a bad query with empty/non-JSON and fetchJSON throws, and a
+    // dropped connection throws too; neither is "no headlines", so say so.
+    errorBox(feed, 'GDELT', runNews);
+    markStale('panelNews', 0);
     report.news = { query, articles: [] };
+    noteSource('news', { src: 'GDELT', err: 'GDELT' });
     return;
   }
+  markStale('panelNews', res.stale ? res.t : 0);
+  noteSource('news', { src: 'GDELT', t: res.t, stale: res.stale });
 
   if (feed) {
     clear(feed);
@@ -142,7 +149,7 @@ export async function runNews() {
     }
   }
 
-  setText('newsMeta', Tf('{n} headlines · {q}', { n: articles.length, q: truncate(query, 52) }));
+  setText('newsMeta', Tf('{n} headlines · {q}', { n: articles.length, q: truncate(query, 52) }) + ' · ' + Tf('fetched {time}', { time: fmtClock(res.t) }));
 
   // Persist for JSON export — only fields GDELT actually returns (no fabrication).
   report.news = {

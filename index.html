@@ -28,12 +28,28 @@
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Carino Currency", "url": "https://currency.carino.systems/", "description": "Carino Currency — a keyless, in-browser finance watcher: live FX trends and movers, finance news, and export/import trade value. Data from ECB/Frankfurter, GDELT and the World Bank; nothing is uploaded.", "operatingSystem": "Any (runs in a web browser)", "isAccessibleForFree": true, "author": {"@type": "Person", "name": "Miguel Cariño", "url": "https://carino.systems/"}}</script>
   <!-- /carino:head -->
   <link rel="stylesheet" href="fonts/carino-fonts.css" />
+  <link rel="stylesheet" href="carino-ui.css" />
   <link rel="stylesheet" href="assets/css/currency.css" />
 </head>
 <body>
 
-  <!-- Control bar (branding comes from the shared navbar) -->
-  <header class="topbar">
+  <!-- App controls; carino-navbar.js moves them into the shared navbar. Live
+       standard, left to right: source badge, freshness, the one main action. -->
+  <div class="cur-actions" data-carino-actions>
+    <span class="live-chip" id="srcChip" title="Data source" data-priority="2">LOADING</span>
+    <span class="fresh" id="freshStamp" hidden></span>
+    <button class="cs-btn primary" id="runAll" aria-label="Refresh" data-priority="1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      <span class="btn-t" data-i18n>Refresh</span>
+    </button>
+    <button class="cs-btn" id="exportJson" aria-label="Export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+      <span class="btn-t" data-i18n>Export</span>
+    </button>
+  </div>
+
+  <!-- Scope strip: what the dashboard shows. Filters only; actions live in the navbar. -->
+  <div class="scope-strip" id="scopeStrip" role="group" aria-label="Scope">
     <div class="controls">
       <label class="ctl">
         <span class="ctl-l" data-i18n>Base</span>
@@ -44,20 +60,12 @@
         <button class="seg-b" data-win="90" role="tab" data-i18n>90D</button>
         <button class="seg-b" data-win="365" role="tab" data-i18n>1Y</button>
       </div>
-      <button class="btn primary" id="runAll" aria-label="Refresh">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        <span class="btn-t" data-i18n>Refresh</span>
-      </button>
-      <button class="btn" id="exportJson" aria-label="Export">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
-        <span class="btn-t" data-i18n>Export</span>
-      </button>
       <div class="progress-wrap">
         <div class="progress"><i id="overallProgress"></i></div>
         <span class="progress-label" id="overallStatus" data-i18n>idle</span>
       </div>
     </div>
-  </header>
+  </div>
 
   <!-- Mobile pillar switcher (hidden on wide screens where all panels show) -->
   <nav class="tabbar" id="tabBar" aria-label="Sections">
@@ -87,7 +95,7 @@
           <div class="chips" id="newsTopics" aria-label="News topics"></div>
           <div class="news-search">
             <input type="search" id="newsQuery" class="input" placeholder="Search finance news…" autocomplete="off" />
-            <button class="btn" id="newsGo" data-i18n>Search</button>
+            <button class="cs-btn" id="newsGo" data-i18n>Search</button>
           </div>
         </div>
         <div class="news-feed" id="newsFeed"></div>
@@ -122,6 +130,8 @@
     </section>
 
   </main>
+
+  <footer class="data-foot cur-foot" id="dataFoot"><span data-i18n>Data: ECB reference rates via Frankfurter, GDELT headlines and World Bank trade, daily to annual.</span> <span data-i18n>Runs in your browser; nothing is uploaded.</span> <span data-i18n>Monitoring only, not advice.</span></footer>
 
   <script src="carino-navbar.js" data-app="Currency" data-repo="Currency" defer></script>
   <script src="carino-lang.js" defer></script>

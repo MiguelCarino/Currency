@@ -5,8 +5,8 @@
    Layout doctrine
    ---------------
    body is a flex COLUMN pinned to 100dvh with overflow:hidden. Its flex-none
-   children are the injected #carinoNav (60px), header.topbar, and — on mobile
-   only — nav.tabbar. main.grid takes the remaining height (flex:1) and NEVER
+   children are the injected #carinoNav (60px), the .scope-strip, — on mobile
+   only — nav.tabbar, and the one-line .data-foot at the bottom. main.grid takes the remaining height (flex:1) and NEVER
    scrolls the page: every panel is a flex column whose .panel-body is the sole
    scroll region.
 
@@ -19,34 +19,20 @@
      nav.tabbar appears (sticky feel, gold underline on active); only the panel
      matching main.grid[data-active] is shown and fills the viewport.
 
-   Fleet look: near-black surfaces (#050505/#0b0b0b/#111), sharp gold #eab308,
-   --ok #22c55e / --err #ef4444, IBM Plex Mono/Sans + Red Hat Display.
+   Fleet tokens and components come from carino-ui.css (linked first); this
+   file adds Currency's own names (--bg-elev-2, --border-soft, --cur-radius …)
+   and the layout.
    ========================================================================== */
 
 :root {
-  --bg:            #050505;
-  --bg-card:       #0b0b0b;
-  --bg-elev:       #111111;
   --bg-elev-2:     #151515;
-  --accent:        #eab308;
-  --accent-faint:  rgba(234,179,8,0.06);
-  --accent-glow:   rgba(234,179,8,0.15);
-  --accent-dim:    rgba(234,179,8,0.30);
-  --border:        #262626;
   --border-soft:   #1a1a1a;
-  --text:          #ffffff;
-  --text-sec:      #a3a3a3;
-  --text-muted:    #8a8a8a;
-  --ok:            #22c55e;   /* strengthening / positive */
-  --err:           #ef4444;   /* weakening / negative */
-  --mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --disp: 'Red Hat Display', var(--sans);
+  --disp: var(--display);
 
   /* density / rhythm tokens */
   --gap:      12px;
   --gap-sm:   8px;
-  --radius:   8px;
+  --cur-radius: 8px;
   --radius-s: 6px;
   --pad-panel: 12px 14px;
   --safe-b:   env(safe-area-inset-bottom, 0px);
@@ -80,8 +66,12 @@ body {
 /* Runtime-injected navbar is body's first child — keep it from shrinking. */
 #carinoNav { flex: none; }
 
-/* ---- top control bar (flex-none) ---------------------------------------- */
-.topbar {
+/* Until carino-navbar.js moves them in, the navbar controls stay out of view. */
+body > .cur-actions { display: none; }
+#runAll svg, #exportJson svg { width: 13px; height: 13px; flex: none; }
+
+/* ---- scope strip (flex-none): base + window, filters only ---------------- */
+.scope-strip {
   flex: none;
   padding: 9px 18px;
   border-bottom: 1px solid var(--border-soft);
@@ -96,6 +86,7 @@ body {
   margin: 0 auto;
 }
 .ctl { display: inline-flex; align-items: center; gap: 8px; }
+.ctl .input { width: auto; }
 .ctl-l {
   font-family: var(--mono); font-size: 0.6rem; text-transform: uppercase;
   letter-spacing: 0.1em; color: var(--text-muted); white-space: nowrap;
@@ -118,18 +109,7 @@ body {
 .seg-b:hover { color: var(--text); }
 .seg-b.active { background: var(--accent-faint); color: var(--accent); }
 
-/* buttons */
-.btn {
-  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
-  background: transparent; border: 1px solid var(--border); color: var(--text-sec);
-  font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-  padding: 8px 13px; border-radius: 5px; transition: 0.18s; white-space: nowrap;
-}
-.btn:hover { border-color: var(--accent); color: var(--accent); }
-.btn svg { width: 14px; height: 14px; flex: none; }
-.btn.primary { border-color: var(--accent-dim); color: var(--accent); background: var(--accent-faint); }
-.btn.primary:hover { background: var(--accent-glow); }
-.btn:disabled { opacity: 0.5; cursor: default; border-color: var(--border); color: var(--text-muted); }
+/* buttons: .cs-btn from carino-ui.css */
 .btn-t { display: inline; }
 
 /* progress meter */
@@ -186,7 +166,7 @@ body {
   overflow: hidden;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--cur-radius);
 }
 /* mobile: reveal the panel matching data-active */
 .grid[data-active="fx"]    #panelFx,
@@ -200,6 +180,8 @@ body {
   padding: 11px 14px 9px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
+.panel h2 > span:first-child { flex: none; white-space: nowrap; }
+.panel h2 { line-height: 1.4; }
 .panel h2 .h2-extra {
   color: var(--text-sec); font-size: 0.62rem; font-weight: 400; text-transform: none;
   letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -363,6 +345,20 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.02); }
 
 .empty-note { color: var(--text-muted); font-family: var(--mono); font-size: 0.72rem; padding: 12px 0; }
 
+/* ---- freshness states ---------------------------------------------------- */
+.loading-box {
+  display: flex; align-items: center; gap: 10px; padding: 14px 0;
+  font-family: var(--mono); font-size: var(--fs-label); color: var(--text-muted);
+}
+.loading-box .spinner { width: 18px; height: 18px; }
+.panel-body > .stale-note { margin: 0 0 8px; }
+.panel-body .alert.err { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.news-feed > .alert, .news-feed > .loading-box { grid-column: 1 / -1; }
+.is-stale .fx-rate, .is-stale .mv-v, .is-stale .stat .n, .is-stale .news-item, .is-stale table.tbl td { opacity: 0.55; }
+
+/* ---- source line (flex-none, bottom) ------------------------------------- */
+.cur-foot { flex: none; padding: 6px 18px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* ==========================================================================
    DESKTOP (>=900px) — FX-LEAD grid: all three panels visible, page fixed
    ========================================================================== */
@@ -403,26 +399,25 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.02); }
 @media (max-width: 899px) {
   .tabbar { display: flex; }
 
-  .topbar { padding: 8px 12px; }
+  .scope-strip { padding: 8px 12px; }
   .controls { gap: 8px; }
   .grid { padding: 10px; gap: 10px; }
 
   /* active panel fills the remaining viewport; its body scrolls internally */
-  .grid .panel { border-radius: var(--radius); }
+  .grid .panel { border-radius: var(--cur-radius); }
 }
 
 /* Narrow phones: shrink controls, icon-only action buttons */
 @media (max-width: 560px) {
-  .topbar { padding: 7px 10px; }
+  .scope-strip { padding: 7px 10px; }
   .controls { gap: 6px; }
   .ctl-l { display: none; }                       /* labels implied by content */
-  .controls .btn .btn-t { display: none; }        /* icon-only Refresh / Export */
-  .controls .btn { padding: 8px 10px; }
+  #carinoNav .btn-t, #carinoNav .chip-src { display: none; }            /* icon-only Refresh / Export */
+  .cur-foot { white-space: normal; text-align: left; line-height: 1.4; padding-top: 5px; padding-bottom: 5px; }
   .seg-b { padding: 7px 9px; }
   .input { padding: 6px 8px; font-size: 0.72rem; }
-  .progress-wrap { flex: 1 1 100%; order: 5; min-width: 0; }
+  .progress-wrap { flex: 1 1 100px; min-width: 0; }
 
-  .news-search .btn { padding: 8px 12px; }
   .fx-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .news-feed { grid-template-columns: 1fr; }
 }
@@ -437,7 +432,7 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.02); }
 /* Honor left/right safe-area insets (notch in landscape) so controls and panels
    never sit under a cutout. */
 @supports (padding: env(safe-area-inset-left)) {
-  .topbar { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
+  .scope-strip { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
   .tabbar { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
   .grid   { padding-left: max(var(--gap), env(safe-area-inset-left)); padding-right: max(var(--gap), env(safe-area-inset-right)); }
 }

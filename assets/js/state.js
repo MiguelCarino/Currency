@@ -51,3 +51,12 @@ export function resetReport() {
   report.trade = { iso3: null, name: null, exports: [], imports: [], balance: [], latestYear: null };
   report.finishedAt = null;
 }
+
+// Where each panel's data stands, for the navbar badge: { src, t, stale, err,
+// loading }. t is when the shown copy was fetched. Pillars report through
+// noteSource(); app.js repaints the badge on 'cur:source'.
+export const sources = {};
+export function noteSource(name, info) {
+  sources[name] = info;
+  document.dispatchEvent(new CustomEvent('cur:source', { detail: { name } }));
+}

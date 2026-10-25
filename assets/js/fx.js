@@ -10,9 +10,9 @@
 
 import {
   $, el, setText, clear, fmtPct, fmtNum, pctChange, trend, T, Tf, currencyName,
-  isoDate, daysAgo, fetchJSON, tryAll, cached, TTL,
+  isoDate, daysAgo, fetchJSON, tryAll, cached, TTL, fmtClock, markStale, errorBox, loadingBox,
 } from './util.js';
-import { settings, saveSettings, toggleWatch, report } from './state.js';
+import { settings, saveSettings, toggleWatch, report, noteSource } from './state.js';
 import { CURRENCIES, BY_CODE } from './data/currencies.js';
 import { sparkline } from './viz.js';
 
@@ -83,7 +83,9 @@ export async function runFx() {
     emptyNote(grid, T('No currencies watched — tap a chip above to add one.'));
     if (movers) clear(movers);
     setText('fxAsOf', '');
+    markStale('panelFx', 0);
     report.fx = { base, window: windowDays, asOf: null, rows: [], movers: [] };
+    noteSource('fx', { src: 'ECB' });
     return;
   }
 
@@ -92,22 +94,29 @@ export async function runFx() {
   const csv = symbols.join(',');
   const qs = `${FROM}..${TO}?base=${base}&symbols=${csv}`;
 
-  let data;
+  let data, res;
+  if (grid && !grid.querySelector('.fx-card')) loadingBox(grid);
+  noteSource('fx', { src: 'ECB', loading: true });
   try {
-    data = await cached('fx:' + base + ':' + symbols.join(',') + ':' + windowDays, TTL.fx, () =>
+    res = await cached('fx:' + base + ':' + symbols.join(',') + ':' + windowDays, TTL.fx, () =>
       tryAll([
         () => fetchJSON(`https://api.frankfurter.dev/v1/${qs}`),
         () => fetchJSON(`https://api.frankfurter.app/${qs}`),
       ])
     );
+    data = res.v;
   } catch (e) {
     console.warn('fx fetch', e);
-    emptyNote(grid, T('Could not load FX rates right now. Please refresh in a moment.'));
+    errorBox(grid, 'Frankfurter', runFx);
     if (movers) clear(movers);
     setText('fxAsOf', '');
+    markStale('panelFx', 0);
     report.fx = { base, window: windowDays, asOf: null, rows: [], movers: [] };
+    noteSource('fx', { src: 'ECB', err: 'Frankfurter' });
     return;
   }
+  markStale('panelFx', res.stale ? res.t : 0);
+  noteSource('fx', { src: 'ECB', t: res.t, stale: res.stale });
 
   const rates = (data && data.rates) || {};
   const dates = Object.keys(rates).sort();   // ascending, working days only
@@ -144,7 +153,7 @@ export async function runFx() {
     renderMovers(movers, rows, windowDays, asOf);
   }
 
-  setText('fxAsOf', Tf('as of {d} · vs {b}', { d: asOf, b: base }));
+  setText('fxAsOf', Tf('as of {d} · vs {b}', { d: asOf, b: base }) + ' · ' + Tf('fetched {time}', { time: fmtClock(res.t) }));
 
   // Shared report for JSON export.
   report.fx = {

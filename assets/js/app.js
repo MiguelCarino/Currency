@@ -14,8 +14,8 @@
 // Cross-context: trade.js dispatches document 'cur:country' on change; news.js MAY
 // listen to refresh a derived query. All coordination is via shared state.js.
 
-import { $, setText, T } from './util.js';
-import { report, settings, saveSettings } from './state.js';
+import { $, setText, T, Tf } from './util.js';
+import { report, settings, saveSettings, sources } from './state.js';
 import { initFx, runFx } from './fx.js';
 import { initNews, runNews } from './news.js';
 import { initTrade, runTrade } from './trade.js';
@@ -49,7 +49,50 @@ async function runAll() {
   setProgress(1, T('updated'));
   if (btn) btn.disabled = false;
   running = false;
+  renderBadge();
 }
+
+// ---- source badge + Updated stamp (navbar) --------------------------------
+// One badge for the page, from what each panel reported (state.sources): an
+// error beats a stale copy, which beats the normal DAILY badge, so the worst
+// panel always shows. "Updated" is the OLDEST copy on screen, not the newest,
+// so a cached panel cannot hide behind a fresh one.
+const NAMES = { fx: 'Frankfurter', news: 'GDELT', trade: 'the World Bank' };
+function fmtAge(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 60) return m + 'm';
+  const h = Math.round(m / 60);
+  return h < 48 ? h + 'h' : Math.round(h / 24) + 'd';
+}
+function renderBadge() {
+  const chip = $('srcChip');
+  const fresh = $('freshStamp');
+  if (!chip) return;
+  const list = Object.values(sources);
+  const errs = Object.keys(sources).filter((k) => sources[k].err);
+  const stale = list.filter((x) => x.stale);
+  const times = list.filter((x) => x.t).map((x) => x.t);
+  const oldest = times.length ? Math.min(...times) : 0;
+  let text, kind = '', title = T('Data source'), suffix = '';
+  if (running && !times.length) text = T('LOADING');
+  else if (errs.length) {
+    text = T('ERROR'); kind = 'err';
+    title = errs.map((k) => Tf('Could not reach {source}.', { source: T(NAMES[k]) })).join(' ');
+  } else if (stale.length) {
+    text = T('STALE'); suffix = ' · ' + fmtAge(Date.now() - Math.min(...stale.map((x) => x.t))); kind = 'stale';
+  } else { text = T('DAILY'); suffix = ' · ECB'; kind = 'delayed'; title = T('Daily ECB reference rates, not intraday'); }
+  chip.textContent = text;
+  // The provider or the age gives way first on a phone (.chip-src hides there).
+  if (suffix) { const sp = document.createElement('span'); sp.className = 'chip-src'; sp.textContent = suffix; chip.appendChild(sp); }
+  chip.className = 'live-chip' + (kind ? ' ' + kind : '');
+  chip.title = title;
+  if (fresh) {
+    fresh.hidden = !oldest;
+    if (oldest) fresh.textContent = T('Updated') + ' ' + new Date(oldest).toLocaleTimeString('en-GB', { hour12: false });
+    fresh.className = 'fresh' + (kind === 'err' ? ' err' : kind === 'stale' ? ' stale' : '');
+  }
+}
+document.addEventListener('cur:source', renderBadge);
 
 // The trend-window segmented control only affects FX.
 function initWinTabs() {
@@ -117,6 +160,7 @@ if (jsonBtn) jsonBtn.addEventListener('click', () => { try { exportJSON(); } cat
 // own; they preserve the current selection, so this is a repaint, not a reset.
 window.onLanguageApplied = () => {
   try {
+    renderBadge();
     initFx();
     initNews();
     initTrade();

@@ -95,13 +95,28 @@ export function cacheSet(key, value) {
   try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ t: Date.now(), v: value })); }
   catch (e) { /* quota / private mode — run without cache */ }
 }
-// Fetch-through-cache: return cached value if fresh, else run getter and store it.
+// Fetch-through-cache. Resolves to { v, t, stale }: the payload, when it was
+// fetched (ms), and whether it is an expired copy shown because the refetch
+// failed. A panel always gets the age to show next to the numbers; an old copy
+// is never passed off as a fresh one. With no copy at all the error is thrown.
 export async function cached(key, ttlMs, getter) {
-  const hit = cacheGet(key, ttlMs);
-  if (hit != null) return hit;
-  const v = await getter();
-  if (v != null) cacheSet(key, v);
-  return v;
+  const rec = cacheRec(key);
+  if (rec && (ttlMs == null || Date.now() - rec.t <= ttlMs)) return { v: rec.v, t: rec.t, stale: false };
+  try {
+    const v = await getter();
+    if (v != null) cacheSet(key, v);
+    return { v, t: Date.now(), stale: false };
+  } catch (e) {
+    if (rec) return { v: rec.v, t: rec.t, stale: true, err: e };
+    throw e;
+  }
+}
+function cacheRec(key) {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    const r = raw ? JSON.parse(raw) : null;
+    return r && r.v != null && isFinite(r.t) ? r : null;
+  } catch (e) { return null; }
 }
 
 // TTLs tuned to each source's real publish cadence.
@@ -141,3 +156,42 @@ function displayName(type, code, fallback) {
 }
 export const currencyName = (code, fallback) => displayName('currency', code, fallback);
 export const countryName = (iso2, fallback) => displayName('region', iso2, fallback);
+
+// ---- freshness UI (Branding: .is-stale, .stale-note, .alert.err) ------------
+// A clock time in the reader's locale: "14:05".
+export function fmtClock(t) {
+  try { return new Date(t).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); }
+  catch (e) { return new Date(t).toISOString().slice(11, 16); }
+}
+// Mark a panel stale (dimmed numbers + the last-good-copy note) or clear it.
+export function markStale(panelId, t) {
+  const panel = $(panelId);
+  if (!panel) return;
+  panel.classList.toggle('is-stale', !!t);
+  const body = panel.querySelector('.panel-body');
+  let note = panel.querySelector('.stale-note');
+  if (!t) { if (note) note.remove(); return; }
+  if (!note) { note = el('p', 'stale-note'); body.insertBefore(note, body.firstChild); }
+  note.textContent = Tf('Showing the last good copy from {time}.', { time: fmtClock(t) });
+}
+// A fetch that failed with nothing to fall back on: an error, never "no results".
+export function errorBox(node, source, retry) {
+  clear(node);
+  if (!node) return;
+  const box = el('div', 'alert err');
+  box.appendChild(el('span', null, Tf('Could not reach {source}.', { source }) + ' '));
+  const b = el('button', 'cs-btn', T('Retry'));
+  b.type = 'button';
+  b.addEventListener('click', () => { Promise.resolve().then(retry).catch(() => {}); });
+  box.appendChild(b);
+  node.appendChild(box);
+}
+// First load of a panel: a dark spinner in place, never a blank area.
+export function loadingBox(node) {
+  clear(node);
+  if (!node) return;
+  const w = el('div', 'loading-box');
+  w.appendChild(el('div', 'spinner'));
+  w.appendChild(el('span', null, T('Loading…')));
+  node.appendChild(w);
+}

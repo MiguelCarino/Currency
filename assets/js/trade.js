@@ -3,10 +3,11 @@
 // indicators for the selected economy — exports (NE.EXP.GNFS.CD) and imports
 // (NE.IMP.GNFS.CD) of goods & services, current US$ — build aligned annual
 // series, and render stat tiles, a two-line chart, and a table. Nothing throws
-// out of runTrade(); on failure the table area shows a small .empty-note.
+// out of runTrade(); a failed fetch shows an error with Retry in the table area,
+// and only a real answer with no data shows the .empty-note.
 
-import { $, el, setText, clear, fmtMoney, fmtPct, pctChange, trend, cached, fetchJSON, TTL, T, Tf, countryName } from './util.js';
-import { settings, saveSettings, report } from './state.js';
+import { $, el, setText, clear, fmtMoney, fmtPct, pctChange, trend, cached, fetchJSON, TTL, T, Tf, countryName, fmtClock, markStale, errorBox, loadingBox } from './util.js';
+import { settings, saveSettings, report, noteSource } from './state.js';
 import { COUNTRIES, COUNTRY_BY_ISO3 } from './data/countries.js';
 
 const WB = 'https://api.worldbank.org/v2/country/';
@@ -28,12 +29,16 @@ function parseSeries(payload) {
 }
 
 // Fetch both indicators for an ISO3 and return raw ascending series.
+// t is the older of the two fetch times; stale if either is an expired copy.
 async function fetchTrade(iso3) {
-  const [expP, impP] = await Promise.all([
+  const [expR, impR] = await Promise.all([
     cached('trade:exp:' + iso3, TTL.trade, () => fetchJSONBoth(iso3, 'NE.EXP.GNFS.CD')),
     cached('trade:imp:' + iso3, TTL.trade, () => fetchJSONBoth(iso3, 'NE.IMP.GNFS.CD')),
   ]);
-  return { exports: parseSeries(expP), imports: parseSeries(impP) };
+  return {
+    exports: parseSeries(expR.v), imports: parseSeries(impR.v),
+    t: Math.min(expR.t, impR.t), stale: expR.stale || impR.stale,
+  };
 }
 
 // Thin wrapper so cached() stores the raw payload per indicator.
@@ -73,15 +78,25 @@ export async function runTrade() {
   const country = COUNTRY_BY_ISO3[iso3];
   const name = country ? country.name : iso3;
 
-  let exports = [], imports = [];
+  let exports = [], imports = [], t = 0, stale = false;
+  const tbody = $('tradeTable');
+  if (tbody && !tbody.children.length) { const td = tableCell(); if (td) loadingBox(td); }
+  noteSource('trade', { src: 'World Bank', loading: true });
   try {
-    ({ exports, imports } = await fetchTrade(iso3));
+    ({ exports, imports, t, stale } = await fetchTrade(iso3));
   } catch (e) {
-    renderEmpty(T('No World Bank trade data for this economy.'));
+    renderEmpty('');
+    const td = tableCell();
+    if (td) errorBox(td, T('the World Bank'), runTrade);
+    drawTradeChart($('tradeChart'), [], []);
+    markStale('panelTrade', 0);
     report.trade = { iso3, name, exports: [], imports: [], balance: [], latestYear: null };
     setText('tradeMeta', T('World Bank · goods & services · current US$'));
+    noteSource('trade', { src: 'World Bank', err: T('the World Bank') });
     return;
   }
+  markStale('panelTrade', stale ? t : 0);
+  noteSource('trade', { src: 'World Bank', t, stale });
 
   // Align by year: maps + balance where both present.
   const expMap = new Map(exports.map((d) => [d.year, d.value]));
@@ -120,7 +135,7 @@ export async function runTrade() {
   renderTable(expMap, impMap, balMap);
 
   // Meta + report ---------------------------------------------------------
-  setText('tradeMeta', Tf('World Bank · goods & services · current US$ · latest FY{y}', { y: latestYear }));
+  setText('tradeMeta', Tf('World Bank · goods & services · current US$ · latest FY{y}', { y: latestYear }) + ' · ' + Tf('fetched {time}', { time: fmtClock(t) }));
   report.trade = { iso3, name, exports, imports, balance, latestYear };
 }
 
@@ -174,6 +189,21 @@ function renderTable(expMap, impMap, balMap) {
 
     tbody.appendChild(tr);
   }
+}
+
+// The one full-width cell of the table body (after renderEmpty), for a
+// spinner or an error.
+function tableCell() {
+  const tbody = $('tradeTable');
+  if (!tbody) return null;
+  clear(tbody);
+  const tr = el('tr');
+  const td = el('td');
+  td.colSpan = 5;
+  td.style.textAlign = 'left';
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+  return td;
 }
 
 // Show a single empty-note row in the table body and reset the tiles.
