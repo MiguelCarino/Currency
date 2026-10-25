@@ -98,16 +98,9 @@ body > .cur-actions { display: none; }
 }
 .input:focus { outline: none; border-color: var(--accent-dim); }
 
-/* segmented window switch */
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
-.seg-b {
-  background: transparent; border: none; color: var(--text-sec); cursor: pointer;
-  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; padding: 7px 11px;
-  transition: 0.15s;
-}
-.seg-b:not(:last-child) { border-right: 1px solid var(--border); }
-.seg-b:hover { color: var(--text); }
-.seg-b.active { background: var(--accent-faint); color: var(--accent); }
+/* trend-window switch: a group of Branding .toggle-btn */
+.seg { display: inline-flex; gap: 4px; }
+.seg .toggle-btn { padding: 7px 11px; }
 
 /* buttons: .cs-btn from carino-ui.css */
 .btn-t { display: inline; }
@@ -131,17 +124,8 @@ body > .cur-actions { display: none; }
   backdrop-filter: blur(6px);
   position: sticky; top: 0; z-index: 5;
 }
-.tab-b {
-  flex: 1 1 auto;
-  background: transparent; border: none; cursor: pointer;
-  color: var(--text-sec);
-  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
-  padding: 11px 6px 9px;
-  border-bottom: 2px solid transparent;
-  transition: 0.15s;
-}
-.tab-b:hover { color: var(--text); }
-.tab-b.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* the buttons are Branding .tabbtn; on a phone they share the row */
+.tabbar .tabbtn { flex: 1 1 auto; padding: 11px 6px 9px; }
 
 /* ---- main grid: fills remaining height, never scrolls the page ---------- */
 .grid {
@@ -414,7 +398,7 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.02); }
   .ctl-l { display: none; }                       /* labels implied by content */
   #carinoNav .btn-t, #carinoNav .chip-src { display: none; }            /* icon-only Refresh / Export */
   .cur-foot { white-space: normal; text-align: left; line-height: 1.4; padding-top: 5px; padding-bottom: 5px; }
-  .seg-b { padding: 7px 9px; }
+  .seg .toggle-btn { padding: 7px 9px; }
   .input { padding: 6px 8px; font-size: 0.72rem; }
   .progress-wrap { flex: 1 1 100px; min-width: 0; }
 

@@ -98,10 +98,13 @@ document.addEventListener('cur:source', renderBadge);
 function initWinTabs() {
   const wrap = $('winTabs');
   if (!wrap) return;
-  const sync = () => [...wrap.querySelectorAll('.seg-b')].forEach((b) =>
-    b.classList.toggle('active', +b.dataset.win === settings.windowDays));
+  const sync = () => [...wrap.querySelectorAll('.toggle-btn')].forEach((b) => {
+    const on = +b.dataset.win === settings.windowDays;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
   wrap.addEventListener('click', (e) => {
-    const b = e.target.closest('.seg-b');
+    const b = e.target.closest('.toggle-btn');
     if (!b) return;
     settings.windowDays = +b.dataset.win;
     saveSettings();
@@ -131,10 +134,13 @@ function initTabs() {
   if (!bar || !grid) return;
   const set = (t) => {
     grid.dataset.active = t;
-    [...bar.querySelectorAll('.tab-b')].forEach((b) => b.classList.toggle('active', b.dataset.tab === t));
+    [...bar.querySelectorAll('.tabbtn')].forEach((b) => {
+      b.classList.toggle('active', b.dataset.tab === t);
+      b.setAttribute('aria-pressed', b.dataset.tab === t ? 'true' : 'false');
+    });
   };
   bar.addEventListener('click', (e) => {
-    const b = e.target.closest('.tab-b');
+    const b = e.target.closest('.tabbtn');
     if (b) set(b.dataset.tab);
   });
   set(grid.dataset.active || 'fx');

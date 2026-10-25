@@ -55,10 +55,10 @@
         <span class="ctl-l" data-i18n>Base</span>
         <select id="baseSelect" class="input" aria-label="Base currency"></select>
       </label>
-      <div class="seg" id="winTabs" role="tablist" aria-label="Trend window">
-        <button class="seg-b" data-win="30" role="tab" data-i18n>30D</button>
-        <button class="seg-b" data-win="90" role="tab" data-i18n>90D</button>
-        <button class="seg-b" data-win="365" role="tab" data-i18n>1Y</button>
+      <div class="seg" id="winTabs" role="group" aria-label="Trend window">
+        <button class="toggle-btn" data-win="30" data-i18n>30D</button>
+        <button class="toggle-btn" data-win="90" data-i18n>90D</button>
+        <button class="toggle-btn" data-win="365" data-i18n>1Y</button>
       </div>
       <div class="progress-wrap">
         <div class="progress"><i id="overallProgress"></i></div>
@@ -69,9 +69,9 @@
 
   <!-- Mobile pillar switcher (hidden on wide screens where all panels show) -->
   <nav class="tabbar" id="tabBar" aria-label="Sections">
-    <button class="tab-b" data-tab="fx" data-i18n>Trends</button>
-    <button class="tab-b" data-tab="news" data-i18n>News</button>
-    <button class="tab-b" data-tab="trade" data-i18n>Trade</button>
+    <button class="tabbtn" data-tab="fx" data-i18n>Trends</button>
+    <button class="tabbtn" data-tab="news" data-i18n>News</button>
+    <button class="tabbtn" data-tab="trade" data-i18n>Trade</button>
   </nav>
 
   <main class="grid" id="appGrid" data-active="fx">
