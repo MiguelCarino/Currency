@@ -15,6 +15,8 @@
 
 const I18N = {
     es: {
+        // navbar overflow button (carino-navbar.js asks window.t)
+        'More': 'Más',
         // greeting (written by carino-navbar.js)
         'Late shift.': 'Turno nocturno.',
         'Good morning.': 'Buenos días.',
@@ -117,6 +119,8 @@ const I18N = {
         'Carino Currency — FX, News & Trade': 'Carino Currency — divisas, noticias y comercio',
     },
     'pt-BR': {
+        // navbar overflow button (carino-navbar.js asks window.t)
+        'More': 'Mais',
         // greeting (written by carino-navbar.js)
         'Late shift.': 'Turno da noite.',
         'Good morning.': 'Bom dia.',
@@ -219,6 +223,8 @@ const I18N = {
         'Carino Currency — FX, News & Trade': 'Carino Currency — câmbio, notícias e comércio',
     },
     ja: {
+        // navbar overflow button (carino-navbar.js asks window.t)
+        'More': 'その他',
         // greeting (written by carino-navbar.js)
         'Late shift.': '夜勤お疲れさま。',
         'Good morning.': 'おはようございます。',
@@ -321,6 +327,8 @@ const I18N = {
         'Carino Currency — FX, News & Trade': 'Carino Currency — 為替・ニュース・貿易',
     },
     ru: {
+        // navbar overflow button (carino-navbar.js asks window.t)
+        'More': 'Ещё',
         // greeting (written by carino-navbar.js)
         'Late shift.': 'Ночная смена.',
         'Good morning.': 'Доброе утро.',
