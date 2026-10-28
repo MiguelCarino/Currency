@@ -26,6 +26,14 @@ Three pillars, all from public keyless + CORS-friendly sources, computed entirel
   zone rather than a region). That is what the `iso2` on each country is for. The GDELT query built in `activeQuery()` stays
   English on purpose — it is sent to an English news index, not shown to anyone.
 
+## Shared rates (`carino-fx.js`)
+
+This repo holds the canonical `carino-fx.js`: the fleet's latest-rates snapshot (ECB through
+api.frankfurter.dev, open.er-api.com for the gaps), kept in USD terms and shared across
+`*.carino.systems` in a small `carino_fx` cookie for six hours. The page refreshes it on load, so
+[Quote](https://quote.carino.systems) can reuse it without a fetch of its own. `Carino-Systems/propagate.sh`
+copies it to the sites that carry it. `?base=MXN` opens the page on that base currency.
+
 ## Structure
 
 ```

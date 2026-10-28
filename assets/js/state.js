@@ -2,7 +2,7 @@
 // localStorage under cur_ keys; nothing is ever sent anywhere but the public
 // keyless data sources (Frankfurter/ECB, GDELT, World Bank).
 
-import { DEFAULT_BASE, DEFAULT_WATCH } from './data/currencies.js';
+import { DEFAULT_BASE, DEFAULT_WATCH, CURRENCIES } from './data/currencies.js';
 import { DEFAULT_COUNTRY } from './data/countries.js';
 
 const K = 'cur_settings';
@@ -24,6 +24,13 @@ function load() {
 }
 
 export const settings = load();
+
+// ?base=MXN (the link Quote shows next to its exchange rate) opens on that base for this visit; it is saved only
+// if the visitor then changes something. Unknown codes are ignored.
+try {
+  const qb = new URLSearchParams(location.search).get('base');
+  if (qb && CURRENCIES.some((c) => c.code === qb.toUpperCase())) settings.base = qb.toUpperCase();
+} catch (e) { /* no URL API */ }
 
 export function saveSettings() {
   try { localStorage.setItem(K, JSON.stringify(settings)); } catch (e) { /* quota */ }

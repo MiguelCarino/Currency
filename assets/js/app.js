@@ -147,6 +147,8 @@ function initTabs() {
 }
 
 // ---- boot ---------------------------------------------------------------
+// Refresh the fleet's shared latest-rates snapshot (carino-fx.js) so Quote can reuse it without a fetch of its own.
+if (window.CarinoFX) window.CarinoFX.latest().catch(() => {});
 initFx();
 initNews();
 initTrade();
