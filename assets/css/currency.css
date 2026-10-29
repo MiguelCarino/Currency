@@ -6,7 +6,7 @@
    ---------------
    body is a flex COLUMN pinned to 100dvh with overflow:hidden. Its flex-none
    children are the injected #carinoNav (60px), the .scope-strip, — on mobile
-   only — nav.tabbar, and the one-line .data-foot at the bottom. main.grid takes the remaining height (flex:1) and NEVER
+   only — nav.tabbar. main.grid takes the remaining height (flex:1) and NEVER
    scrolls the page: every panel is a flex column whose .panel-body is the sole
    scroll region.
 
@@ -340,8 +340,6 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.02); }
 .news-feed > .alert, .news-feed > .loading-box { grid-column: 1 / -1; }
 .is-stale .fx-rate, .is-stale .mv-v, .is-stale .stat .n, .is-stale .news-item, .is-stale table.tbl td { opacity: 0.55; }
 
-/* ---- source line (flex-none, bottom) ------------------------------------- */
-.cur-foot { flex: none; padding: 6px 18px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ==========================================================================
    DESKTOP (>=900px) — FX-LEAD grid: all three panels visible, page fixed
@@ -397,7 +395,6 @@ table.tbl tr:hover td { background: rgba(255,255,255,0.02); }
   .controls { gap: 6px; }
   .ctl-l { display: none; }                       /* labels implied by content */
   #carinoNav .btn-t, #carinoNav .chip-src { display: none; }            /* icon-only Refresh / Export */
-  .cur-foot { white-space: normal; text-align: left; line-height: 1.4; padding-top: 5px; padding-bottom: 5px; }
   .seg .toggle-btn { padding: 7px 9px; }
   .input { padding: 6px 8px; font-size: 0.72rem; }
   .progress-wrap { flex: 1 1 100px; min-width: 0; }
