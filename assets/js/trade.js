@@ -224,7 +224,7 @@ function renderEmpty(msg) {
 }
 
 // ---- chart (self-contained HiDPI, two line series) ----------------------
-// Draws exports (green/--ok) and imports (red/--err) over the shared year axis.
+// Draws exports (--trade-exp, else --ok) and imports (--trade-imp, else --err) over the shared year axis.
 // Reads theme colors from CSS custom properties, like viz.js. Empty → clear.
 function drawTradeChart(canvas, exports, imports) {
   if (!canvas) return;
@@ -232,6 +232,8 @@ function drawTradeChart(canvas, exports, imports) {
   const col = (name, fb) => (cs.getPropertyValue(name).trim() || fb);
   const okC = col('--ok', '#22c55e');
   const errC = col('--err', '#ef4444');
+  const expC = col('--trade-exp', okC);   // Colourful: category hue; Gold: unset → --ok
+  const impC = col('--trade-imp', errC);  // Colourful: category hue; Gold: unset → --err
   const accent = col('--accent', '#eab308');
   const grid = col('--border', '#262626');
   const axis = col('--text-muted', '#666');
@@ -286,16 +288,16 @@ function drawTradeChart(canvas, exports, imports) {
     const last = series[series.length - 1];
     ctx.fillStyle = stroke; ctx.beginPath(); ctx.arc(X(last.year), Y(last.value), 2.6, 0, Math.PI * 2); ctx.fill();
   };
-  plot(exports, okC);
-  plot(imports, errC);
+  plot(exports, expC);
+  plot(imports, impC);
 
   // Legend (top-left).
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.font = "10px 'IBM Plex Mono', monospace";
   const ly = padT + 2;
-  ctx.fillStyle = okC; ctx.fillRect(padL, ly - 4, 10, 3);
+  ctx.fillStyle = expC; ctx.fillRect(padL, ly - 4, 10, 3);
   ctx.fillStyle = axis; ctx.fillText(T('Exports'), padL + 14, ly - 2);
-  ctx.fillStyle = errC; ctx.fillRect(padL + 66, ly - 4, 10, 3);
+  ctx.fillStyle = impC; ctx.fillRect(padL + 66, ly - 4, 10, 3);
   ctx.fillStyle = axis; ctx.fillText(T('Imports'), padL + 80, ly - 2);
   void accent;   // reserved (kept read to match theme convention)
 }

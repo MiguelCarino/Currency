@@ -61,6 +61,9 @@
     :root[data-carino-theme="color"] .panel-body::-webkit-scrollbar-thumb:hover { background: var(--ct-scroll); background-clip: padding-box; }
     :root[data-carino-theme="color"] .news-item:hover { background: var(--ct-hover); }
     :root[data-carino-theme="color"] table.tbl tr:hover td { background: var(--ct-hover); }
+    :root[data-carino-theme="color"] { --trade-exp: var(--ct-teal); --trade-imp: var(--ct-purple); }
+    :root[data-carino-theme="color"] .stat[class*="ct-cat-"] .n { color: var(--tt); }
+    :root[data-carino-theme="color"] #tBalanceVal { color: var(--text); }
   </style>
 </head>
 <body>
@@ -145,8 +148,8 @@
             <select id="tradeCountry" class="input" aria-label="Trade economy"></select>
           </label>
           <div class="stats" id="tradeStats">
-            <div class="stat"><div class="n" id="tExportsVal">—</div><div class="l"><span data-i18n>Exports</span> <span id="tExportsYoY" class="yoy"></span></div></div>
-            <div class="stat"><div class="n" id="tImportsVal">—</div><div class="l"><span data-i18n>Imports</span> <span id="tImportsYoY" class="yoy"></span></div></div>
+            <div class="stat ct-cat-teal"><div class="n" id="tExportsVal">—</div><div class="l"><span data-i18n>Exports</span> <span id="tExportsYoY" class="yoy"></span></div></div>
+            <div class="stat ct-cat-purple"><div class="n" id="tImportsVal">—</div><div class="l"><span data-i18n>Imports</span> <span id="tImportsYoY" class="yoy"></span></div></div>
             <div class="stat"><div class="n" id="tBalanceVal">—</div><div class="l"><span data-i18n>Balance</span> <span id="tradeYear" class="yoy"></span></div></div>
           </div>
         </div>
